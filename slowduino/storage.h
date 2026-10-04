@@ -80,6 +80,14 @@ uint8_t eepromReadByte(uint16_t address);
 bool eepromWriteByte(uint16_t address, uint8_t value);
 
 /**
+ * @brief Grava na memória não-volátil o que foi escrito com eepromWriteByte()
+ *
+ * No AVR é no-op (EEPROM real, cada byte já foi gravado). No STM32 a EEPROM
+ * é emulada em flash e as escritas ficam num buffer em RAM até este commit.
+ */
+void eepromCommit();
+
+/**
  * @brief Lê um uint16_t da EEPROM (little-endian)
  */
 uint16_t eepromReadU16(uint16_t address);

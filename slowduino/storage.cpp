@@ -157,6 +157,7 @@ void saveAllConfig() {
   saveVETable();
   saveIgnTable();
   saveCalibrationTables();
+  eepromCommit();
 
   DEBUG_PRINTLN(F("EEPROM: Configuração salva"));
 }
@@ -416,6 +417,7 @@ void resetEEPROM() {
 
   // Invalida versão
   eepromWriteByte(EEPROM_VERSION_ADDR, 0xFF);
+  eepromCommit();
 
   // Recarrega defaults
   loadDefaults();
@@ -428,19 +430,57 @@ void resetEEPROM() {
 // FUNÇÕES AUXILIARES DE BAIXO NÍVEL
 // ============================================================================
 
+// Porte STM32 (F1): não há EEPROM de verdade, o core emula numa página de
+// 1KB da flash. EEPROM.write() ali apaga e regrava a página INTEIRA a cada
+// byte (~30-50ms) - um Burn de ~1000 bytes travava o firmware por dezenas de
+// segundos (TunerStudio dá timeout) e gastava ~1000 ciclos de apagamento da
+// flash por Burn. Aqui usamos o buffer em RAM do core: carrega a página uma
+// vez, lê/escreve no buffer e só grava na flash em eepromCommit().
+#if defined(ARDUINO_ARCH_STM32) && !defined(DATA_EEPROM_BASE)
+  #define EEPROM_FLASH_EMULATED
+static bool eepromBufferLoaded = false;
+static bool eepromBufferDirty = false;
+
+static void eepromEnsureBuffer() {
+  if (!eepromBufferLoaded) {
+    eeprom_buffer_fill();
+    eepromBufferLoaded = true;
+  }
+}
+#endif
+
 uint8_t eepromReadByte(uint16_t address) {
+#if defined(EEPROM_FLASH_EMULATED)
+  eepromEnsureBuffer();
+  return eeprom_buffered_read_byte(address);
+#else
   return EEPROM.read(address);
+#endif
 }
 
 bool eepromWriteByte(uint16_t address, uint8_t value) {
-  uint8_t current = EEPROM.read(address);
+  uint8_t current = eepromReadByte(address);
 
   // Só escreve se valor for diferente (prolonga vida da EEPROM)
   if (current != value) {
+#if defined(EEPROM_FLASH_EMULATED)
+    eeprom_buffered_write_byte(address, value);
+    eepromBufferDirty = true;
+#else
     EEPROM.write(address, value);
+#endif
     return true;
   }
   return false;
+}
+
+void eepromCommit() {
+#if defined(EEPROM_FLASH_EMULATED)
+  if (eepromBufferDirty) {
+    eeprom_buffer_flush();
+    eepromBufferDirty = false;
+  }
+#endif
 }
 
 uint16_t eepromReadU16(uint16_t address) {

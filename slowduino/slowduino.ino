@@ -56,6 +56,13 @@ static bool primedFuel = false;
 void setup() {
   // Inicializa serial
   Serial.begin(SERIAL_BAUD);
+#if defined(USBCON) && defined(USBD_USE_CDC)
+  // Porte STM32 com USB CDC: por padrão o core descarta em silêncio TUDO que
+  // é escrito no Serial enquanto o host não ativa a linha DTR. Terminais e
+  // drivers que abrem a porta sem DTR recebiam zero bytes (issue #4) - o
+  // firmware lia o 'Q' mas a resposta nunca saía.
+  Serial.dtr(false);
+#endif
   DEBUG_PRINTLN(F(""));
   DEBUG_PRINTLN(F("========================================"));
   DEBUG_PRINTLN(F("  SLOWDUINO - Super Lowcost Speeduino"));
