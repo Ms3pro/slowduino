@@ -13,10 +13,11 @@
  *    etapa N+1 travou.
  *  - Loop vivo, ciclo de 2 s: 1 piscada longa (loop rodando), +1 curta se o
  *    host já abriu a porta USB (DTR visto), +1 curta se o firmware já
- *    recebeu algum byte do host.
- *  - Texto "DIAG ..." a cada 1 s na USB e na USART2 (PA2=TX, PA3=RX, 115200)
- *    até o primeiro byte chegar do host; depois disso fica quieto para não
- *    atrapalhar o protocolo do TunerStudio.
+ *    recebeu algum byte pela USB, +1 curta (mais tarde no ciclo) se recebeu
+ *    algum byte pela USART2.
+ *  - Texto "DIAG[USB] ..." e "DIAG[UART2] ..." a cada 1 s (USART2: PA2=TX,
+ *    PA3=RX, 115200) até o primeiro byte chegar pela USB; depois disso fica
+ *    quieto para não atrapalhar o protocolo do TunerStudio.
  */
 
 #ifndef DIAG_H
