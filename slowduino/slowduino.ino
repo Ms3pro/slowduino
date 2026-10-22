@@ -35,7 +35,6 @@
 #include "comms.h"
 #include "auxiliaries.h"
 #include "protections.h"
-#include "diag.h"
 
 // ============================================================================
 // VARIÁVEIS DO LOOP
@@ -55,8 +54,6 @@ static bool primedFuel = false;
 // ============================================================================
 
 void setup() {
-  DIAG_INIT();
-
   // Inicializa serial
   Serial.begin(SERIAL_BAUD);
 #if defined(USBCON) && defined(USBD_USE_CDC)
@@ -66,7 +63,6 @@ void setup() {
   // firmware lia o 'Q' mas a resposta nunca saía.
   Serial.dtr(false);
 #endif
-  DIAG_STAGE(1);
   DEBUG_PRINTLN(F(""));
   DEBUG_PRINTLN(F("========================================"));
   DEBUG_PRINTLN(F("  SLOWDUINO - Super Lowcost Speeduino"));
@@ -79,43 +75,36 @@ void setup() {
   // 1. Tabelas (inicializa flags)
   DEBUG_PRINT(F("- Tabelas... "));
   initTables();
-  DIAG_STAGE(2);
   DEBUG_PRINTLN(F("OK"));
 
   // 2. Storage (carrega config da EEPROM)
   DEBUG_PRINT(F("- Storage... "));
   storageInit();
-  DIAG_STAGE(3);
   DEBUG_PRINTLN(F("OK"));
 
   // 3. Sensores
   DEBUG_PRINT(F("- Sensores... "));
   sensorsInit();
-  DIAG_STAGE(4);
   DEBUG_PRINTLN(F("OK"));
 
   // 4. Scheduler (Timer1 + pinos de saída)
   DEBUG_PRINT(F("- Scheduler... "));
   schedulerInit();
-  DIAG_STAGE(5);
   DEBUG_PRINTLN(F("OK"));
 
   // 5. Trigger (decoder + ISR)
   DEBUG_PRINT(F("- Trigger... "));
   triggerInit();
-  DIAG_STAGE(6);
   DEBUG_PRINTLN(F("OK"));
 
   // 6. Comunicação (já inicializado Serial no início)
   DEBUG_PRINT(F("- Comunicação... "));
   commsInit();
-  DIAG_STAGE(7);
   DEBUG_PRINTLN(F("OK"));
 
   // 7. Auxiliares (ventoinha, IAC, bomba)
   DEBUG_PRINT(F("- Auxiliares... "));
   auxiliariesInit();
-  DIAG_STAGE(8);
   DEBUG_PRINTLN(F("OK"));
 
   // 8. Inicializa status
@@ -150,8 +139,6 @@ void setup() {
   lastLoop4Hz = millis();
   lastLoop15Hz = millis();
   lastLoop30Hz = millis();
-
-  DIAG_STAGE(9);
 }
 
 // ============================================================================
@@ -160,8 +147,6 @@ void setup() {
 
 void loop() {
   uint32_t now = millis();
-
-  DIAG_LOOP();
 
   // ------------------------------------------------------------------------
   // POLLING DE INJETORES - MÁXIMA PRIORIDADE (DEVE SER PRIMEIRO!)
