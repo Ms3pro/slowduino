@@ -38,6 +38,16 @@ Before compiling, set the board type in `slowduino/board_config.h`:
 
 > ⚠️ The Slowduino build only drives two ignition channels and supports up to four cylinders; the Mega board is only used for protocol testing or hardware validation in this configuration.
 
+### STM32F103C8 "Blue Pill" (experimental)
+Built with PlatformIO (`./build.sh bluepill` or `./build.sh bluepill_uart`); flash the resulting `firmware.bin` at `0x08000000` with an ST-Link.
+
+| Env | Serial port | Use |
+|-----|-------------|-----|
+| `bluepill_uart` | USART2: PA2 (TX), PA3 (RX), 115200 | TunerStudio through an external 3.3 V USB-TTL adapter. **Tested and working.** |
+| `bluepill` | Native USB CDC (PA11/PA12) | TunerStudio over the board's USB port. **Known issue:** the COM port enumerates but the firmware does not receive bytes on some boards (issue #4). Prefer `bluepill_uart`. |
+
+Wire the adapter as: adapter TX to PA3, adapter RX to PA2, common GND. Do not use PA9/PA10: they are the ignition outputs in this port.
+
 ## 4. First Power-Up
 - The firmware will auto-load default tables and config values on first boot.
 - It will wait for trigger sync before running fuel/ignition.

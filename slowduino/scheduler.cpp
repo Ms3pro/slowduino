@@ -79,12 +79,20 @@ void setupTimer1() {
 // associado (NC) - servem só para gerar interrupção de compare, igual
 // OCR1A/OCR1B no AVR. O contador roda livre (não reseta no compare, igual
 // modo Normal do AVR) porque não usamos PWM/reset-on-match.
-static HardwareTimer schedTimer(TIM2);
+// Construído em setupTimer1() (não como global com instância): o core avisa
+// que o construtor com instância em objeto global roda cedo demais, antes do
+// HAL_Init()/clock, e não consegue reportar erro.
+static HardwareTimer schedTimer;
 
 static void schedTimerCompareA_ISR();
 static void schedTimerCompareB_ISR();
 
 void setupTimer1() {
+  static bool timerSetupDone = false;
+  if (!timerSetupDone) {
+    schedTimer.setup(TIM2);
+    timerSetupDone = true;
+  }
   schedTimer.pause();
   schedTimer.setPrescaleFactor(1152);
   schedTimer.setOverflow(0x10000, TICK_FORMAT);  // wrap em 65536 ticks (16 bits)

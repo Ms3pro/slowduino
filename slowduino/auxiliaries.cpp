@@ -180,7 +180,8 @@ static inline void iacTimerSetup() {
 // mesma cadência do Timer2/CTC do AVR (~3968Hz / 252us). Ligar/desligar o
 // PWM vira pause()/resume() do timer - HardwareTimer não expõe um jeito
 // direto de checar se está rodando, então guardamos isso à parte.
-static HardwareTimer iacTimer(TIM3);
+// Construído em iacTimerSetup() - ver nota em scheduler.cpp sobre HardwareTimer global.
+static HardwareTimer iacTimer;
 static volatile bool iacTimerRunning = false;
 
 static inline void iacTimerStart() { if (!iacTimerRunning) { iacTimer.resume(); iacTimerRunning = true; } }
@@ -192,6 +193,11 @@ static void iacTimer_ISR() {
 }
 
 static inline void iacTimerSetup() {
+  static bool timerSetupDone = false;
+  if (!timerSetupDone) {
+    iacTimer.setup(TIM3);
+    timerSetupDone = true;
+  }
   iacTimer.pause();
   // IDLE_PWM_TICK_HZ (~3968Hz) -> período de ~252us, igual ao tick do AVR
   iacTimer.setOverflow((uint32_t)(1000000UL / IDLE_PWM_TICK_HZ), MICROSEC_FORMAT);
